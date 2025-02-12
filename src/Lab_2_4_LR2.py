@@ -64,11 +64,12 @@ class LinearRegressor:
         Returns:
             None: Modifies the model's coefficients and intercept in-place.
         """
-        # Replace this code with the code you did in the previous laboratory session
+        X = np.c_[X,np.ones(X.shape[0])]  # añadimos una columna de 1s
+        
+        w = np.linalg.inv(X.T @ X) @ (X.T @ y)  # la @ se usa para hacer el producto, X.T representa la traspuesta
 
-        # Store the intercept and the coefficients of the model
-        self.intercept = None
-        self.coefficients = None
+        self.intercept = w[-1]  # extraemos el valor del término independiente (el último del vector w)
+        self.coefficients = w[:-1]  # extraemos los coeficientes de la regresión (son todos los términos de w menos el último)
 
     def fit_gradient_descent(self, X, y, learning_rate=0.01, iterations=1000):
         """
@@ -93,17 +94,22 @@ class LinearRegressor:
 
         # Implement gradient descent (TODO)
         for epoch in range(iterations):
-            predictions = None
-            error = predictions - y
+            predictions = self.predict(X=X[:, 1])
+            error = predictions-y
 
             # TODO: Write the gradient values and the updates for the paramenters
-            gradient = None
-            self.intercept -= None
-            self.coefficients -= None
+            print(error[0],X[0])
+            #gradient = (1/m)*np.sum(error[i]*X[i] for i in range(m))
+            gradient = (1/m) * np.dot(error.T,X)
+
+            #print(gradient)
+            self.intercept -= learning_rate*gradient[0]
+            self.coefficients -= learning_rate*gradient[1]
 
             # TODO: Calculate and print the loss every 10 epochs
             if epoch % 1000 == 0:
-                mse = None
+                # mse = np.sum(np.power(y-predictions, 2)) / m 
+                mse = np.power(evaluate_regression(y,predictions)["RMSE"],2)
                 print(f"Epoch {epoch}: MSE = {mse}")
 
     def predict(self, X):
@@ -121,12 +127,14 @@ class LinearRegressor:
             ValueError: If the model is not yet fitted.
         """
 
-        # Paste your code from last week
-
         if self.coefficients is None or self.intercept is None:
             raise ValueError("Model is not yet fitted")
 
-        return None
+        if np.ndim(X) == 1:
+            predictions = X*self.coefficients + self.intercept  # Y = X*w + b  (modo unidimensional)
+        else:
+            predictions = X@self.coefficients + self.intercept  # Y = X*w + b  (modo multidimensional)
+        return predictions
 
 
 def evaluate_regression(y_true, y_pred):
@@ -141,17 +149,17 @@ def evaluate_regression(y_true, y_pred):
         dict: A dictionary containing the R^2, RMSE, and MAE values.
     """
 
+    rss = np.sum((y_true-y_pred)**2)
+    tss = np.sum((y_true-np.mean(y_true))**2)
+
     # R^2 Score
-    # TODO
-    r_squared = None
+    r_squared = 1 - (rss/tss)
 
     # Root Mean Squared Error
-    # TODO
-    rmse = None
+    rmse = np.sqrt( np.sum(np.power(y_true-y_pred, 2)) /len(y_pred) )
 
     # Mean Absolute Error
-    # TODO
-    mae = None
+    mae = (1/len(y_true))*np.sum(abs(y_true-y_pred))
 
     return {"R2": r_squared, "RMSE": rmse, "MAE": mae}
 
@@ -188,3 +196,16 @@ def one_hot_encode(X, categorical_indices, drop_first=False):
         X_transformed = None
 
     return X_transformed
+
+
+
+
+
+##########################
+##########################
+##########################
+##########################
+##########################
+##########################
+##########################
+#####################
