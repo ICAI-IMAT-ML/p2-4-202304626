@@ -195,20 +195,28 @@ def one_hot_encode(X, categorical_indices, drop_first=False):
     X_transformed = X.copy()
     for index in sorted(categorical_indices, reverse=True):
         # TODO: Extract the categorical column
-        categorical_column = None
+        categorical_column = X_transformed[:,index]
 
         # TODO: Find the unique categories (works with strings)
-        unique_values = None
+        unique_values = set(categorical_column)  # usando un set eliminamos los duplicados
 
         # TODO: Create a one-hot encoded matrix (np.array) for the current categorical column
-        one_hot = None
+        one_hot = np.array([[1 if fila == value else 0 for value in unique_values] for fila in categorical_column])
+        # pones 1s y 0s según corresponda, y eso lo hacemos por cada fila
 
         # Optionally drop the first level of one-hot encoding
         if drop_first:
-            one_hot = one_hot[:, 1:]
+            one_hot = one_hot[:, 1:]  # esto sería para convertirlo en modo dummy encoding no?
 
         # TODO: Delete the original categorical column from X_transformed and insert new one-hot encoded columns
-        X_transformed = None
+        # Partimos la matriz en las columnas antes y después del índice donde queremos insertar nuestras nuevas columnas (one_hot)
+        X_left = X_transformed[:, :index]  # Columnas antes de one_hot
+        X_right = X_transformed[:, index + 1:]  # Columnas después de one_hot
+
+        # Concatenamos Izquierda + One-hot + Derecha usando hstack
+        X_transformed = np.hstack((X_left, one_hot, X_right))
+        # X_transformed = np.insert(X_transformed, index, one_hot, axis=1) # insertamos en X_transformed, las columnas one_hot (columnas por axis=1), en el índice index
+
 
     return X_transformed
 
