@@ -94,20 +94,35 @@ class LinearRegressor:
 
         # Implement gradient descent (TODO)
         for epoch in range(iterations):
-            predictions = self.predict(X=X[:, 1])
-            error = predictions-y
+            predictions = self.predict(X=X[:, 1])  # X es una matriz con la primera columna de todo 1s, por lo que pasamos al preidict la segunda columna solo
+            error = predictions-y   # en la diapo pone y-predictions
+            # print(f"error: {error}")
+            # print(f"error T: {error.T}")
+            # print(f"X: {X}")
 
             # TODO: Write the gradient values and the updates for the paramenters
-            print(error[0],X[0])
             #gradient = (1/m)*np.sum(error[i]*X[i] for i in range(m))
-            gradient = (1/m) * np.dot(error.T,X)
+            gradient = (1/m) * np.dot(error, X)  # dot es para hacer un producto vectorial (en este caso fila por matriz)
+
+            """
+            Lo planteamos como un producto de vector fila, error, (1xN) por matriz, X, (Nx2)
+            De esta manera obtenemos un vector de 1x2, donde cada columna es lo que en la diapositiva
+            sale como thetha sub j, es decir que para j=0 tenemos la parte del gradiente del intercept
+            y para j = 1 tenemos la parte del gradiente de los coeficientes.
+
+            Esto es equivalente a lo que nos dice la fórmula que para actualizar el thetha j, hay que hacer
+            el sumatorio desde i=1 hasta i=N, de el error[i] multiplicado por el x[i] de la columna j.
+            Este sumatorio es equivalente a hacer el producto vectorial de la fila error por la columna j de la matriz X, 
+            porque se multiplican elemento a elemento y luego se suma todo. Así tenemos una forma más compacta.
+            
+            """
 
             #print(gradient)
             self.intercept -= learning_rate*gradient[0]
             self.coefficients -= learning_rate*gradient[1]
 
             # TODO: Calculate and print the loss every 10 epochs
-            if epoch % 1000 == 0:
+            if epoch % 10 == 0:
                 # mse = np.sum(np.power(y-predictions, 2)) / m 
                 mse = np.power(evaluate_regression(y,predictions)["RMSE"],2)
                 print(f"Epoch {epoch}: MSE = {mse}")
