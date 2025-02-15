@@ -64,12 +64,12 @@ class LinearRegressor:
         Returns:
             None: Modifies the model's coefficients and intercept in-place.
         """
-        X = np.c_[X,np.ones(X.shape[0])]  # añadimos una columna de 1s
-        
+        # X = np.c_[X,np.ones(X.shape[0])]  # añadimos una columna de 1s
+
         w = np.linalg.inv(X.T @ X) @ (X.T @ y)  # la @ se usa para hacer el producto, X.T representa la traspuesta
 
-        self.intercept = w[-1]  # extraemos el valor del término independiente (el último del vector w)
-        self.coefficients = w[:-1]  # extraemos los coeficientes de la regresión (son todos los términos de w menos el último)
+        self.intercept = w[0]  # extraemos el valor del término independiente (el primero del vector w)
+        self.coefficients = w[1:]  # extraemos los coeficientes de la regresión (son todos los términos de w menos el primero)
 
     def fit_gradient_descent(self, X, y, learning_rate=0.01, iterations=1000):
         """
@@ -94,7 +94,7 @@ class LinearRegressor:
 
         # Implement gradient descent (TODO)
         for epoch in range(iterations):
-            predictions = self.predict(X=X[:, 1])  # X es una matriz con la primera columna de todo 1s, por lo que pasamos al preidict la segunda columna solo
+            predictions = self.predict(X=X[:, 1:])  # X es una matriz con la primera columna de todo 1s, por lo que pasamos al preidict la segunda columna solo
             error = predictions-y   # en la diapo pone y-predictions
             # print(f"error: {error}")
             # print(f"error T: {error.T}")
@@ -148,7 +148,7 @@ class LinearRegressor:
         if np.ndim(X) == 1:
             predictions = X*self.coefficients + self.intercept  # Y = X*w + b  (modo unidimensional)
         else:
-            predictions = X@self.coefficients + self.intercept  # Y = X*w + b  (modo multidimensional)
+            predictions = X.dot(self.coefficients) + self.intercept  # Y = X*w + b  (modo multidimensional)
         return predictions
 
 
@@ -212,7 +212,8 @@ def one_hot_encode(X, categorical_indices, drop_first=False):
         # Partimos la matriz en las columnas antes y después del índice donde queremos insertar nuestras nuevas columnas (one_hot)
         X_left = X_transformed[:, :index]  # Columnas antes de one_hot
         X_right = X_transformed[:, index + 1:]  # Columnas después de one_hot
-
+        # Borramos la columna que había:
+        X_transformed = np.delete(X_transformed, index, axis=1)
         # Concatenamos Izquierda + One-hot + Derecha usando hstack
         X_transformed = np.hstack((X_left, one_hot, X_right))
         # X_transformed = np.insert(X_transformed, index, one_hot, axis=1) # insertamos en X_transformed, las columnas one_hot (columnas por axis=1), en el índice index
