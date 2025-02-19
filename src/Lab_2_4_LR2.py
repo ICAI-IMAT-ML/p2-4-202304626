@@ -92,13 +92,24 @@ class LinearRegressor:
         )  # Small random numbers
         self.intercept = np.random.rand() * 0.01
 
+        # Para graficar en el notebook:
+        self.loss_vals = []  
+        self.params = []  
+
         # Implement gradient descent (TODO)
         for epoch in range(iterations):
             predictions = self.predict(X=X[:, 1:])  # X es una matriz con la primera columna de todo 1s, por lo que pasamos al preidict la segunda columna solo
-            error = predictions-y   # en la diapo pone y-predictions
+            error = predictions - y   # en la diapo pone y-predictions
             # print(f"error: {error}")
             # print(f"error T: {error.T}")
             # print(f"X: {X}")
+
+            # Calcular loss y almacenarla
+            mse = np.mean(error**2)
+            self.loss_vals.append(mse)
+
+            # Valores actuales de intercept y coeficients
+            self.params.append((self.intercept, self.coefficients))
 
             # TODO: Write the gradient values and the updates for the paramenters
             #gradient = (1/m)*np.sum(error[i]*X[i] for i in range(m))
@@ -119,10 +130,10 @@ class LinearRegressor:
 
             #print(gradient)
             self.intercept -= learning_rate*gradient[0]
-            self.coefficients -= learning_rate*gradient[1]
+            self.coefficients -= learning_rate*gradient[1:]
 
             # TODO: Calculate and print the loss every 10 epochs
-            if epoch % 10 == 0:
+            if epoch % 100000 == 0:
                 # mse = np.sum(np.power(y-predictions, 2)) / m 
                 mse = np.power(evaluate_regression(y,predictions)["RMSE"],2)
                 print(f"Epoch {epoch}: MSE = {mse}")
