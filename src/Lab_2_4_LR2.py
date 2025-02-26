@@ -66,7 +66,7 @@ class LinearRegressor:
         """
         # X = np.c_[X,np.ones(X.shape[0])]  # añadimos una columna de 1s
 
-        w = np.linalg.inv(X.T @ X) @ (X.T @ y)  # la @ se usa para hacer el producto, X.T representa la traspuesta
+        w = np.linalg.pinv(X.T @ X) @ (X.T @ y)  # la @ se usa para hacer el producto, X.T representa la traspuesta
 
         self.intercept = w[0]  # extraemos el valor del término independiente (el primero del vector w)
         self.coefficients = w[1:]  # extraemos los coeficientes de la regresión (son todos los términos de w menos el primero)
@@ -100,21 +100,18 @@ class LinearRegressor:
         for epoch in range(iterations):
             predictions = self.predict(X=X[:, 1:])  # X es una matriz con la primera columna de todo 1s, por lo que pasamos al preidict la segunda columna solo
             error = predictions - y   # en la diapo pone y-predictions
-            # print(f"error: {error}")
-            # print(f"error T: {error.T}")
-            # print(f"X: {X}")
 
             # Calcular loss y almacenarla
             mse = np.mean(error**2)
             self.loss_vals.append(mse)
 
             # Valores actuales de intercept y coeficients
-            self.params.append((self.intercept, self.coefficients))
+            self.params.append((self.intercept, *self.coefficients))
 
             # TODO: Write the gradient values and the updates for the paramenters
             #gradient = (1/m)*np.sum(error[i]*X[i] for i in range(m))
-            gradient = (1/m) * np.dot(error, X)  # dot es para hacer un producto vectorial (en este caso fila por matriz)
-
+            # gradient = (learning_rate/m) * np.dot(error, X)  # dot es para hacer un producto vectorial (en este caso fila por matriz)
+            gradient = (learning_rate/m) * X.T.dot(error)
             """
             Lo planteamos como un producto de vector fila, error, (1xN) por matriz, X, (Nx2)
             De esta manera obtenemos un vector de 1x2, donde cada columna es lo que en la diapositiva
@@ -128,15 +125,21 @@ class LinearRegressor:
             
             """
 
-            #print(gradient)
-            self.intercept -= learning_rate*gradient[0]
-            self.coefficients -= learning_rate*gradient[1:]
+            
+            
+            self.intercept -= gradient[0]
+            self.coefficients -= gradient[1:]
+            # print(f"gra: {gradient}")
+            # print(f"coef: {self.coefficients}")
+            # print(f"int: {self.intercept}")
 
             # TODO: Calculate and print the loss every 10 epochs
-            if epoch % 100000 == 0:
+            if epoch % 10000 == 0:
                 # mse = np.sum(np.power(y-predictions, 2)) / m 
                 mse = np.power(evaluate_regression(y,predictions)["RMSE"],2)
-                print(f"Epoch {epoch}: MSE = {mse}")
+                # print(f"predictions: {predictions}")
+                # print(f"error: {error}")
+                # print(f"Epoch {epoch}: MSE = {mse}")
 
     def predict(self, X):
         """
@@ -182,10 +185,11 @@ def evaluate_regression(y_true, y_pred):
     r_squared = 1 - (rss/tss)
 
     # Root Mean Squared Error
-    rmse = np.sqrt( np.sum(np.power(y_true-y_pred, 2)) /len(y_pred) )
+    N = len(y_pred)
+    rmse = np.sqrt( 1/N * np.sum(np.power(y_true-y_pred, 2)))
 
     # Mean Absolute Error
-    mae = (1/len(y_true))*np.sum(abs(y_true-y_pred))
+    mae = (1/N)*np.sum(abs(y_true-y_pred))
 
     return {"R2": r_squared, "RMSE": rmse, "MAE": mae}
 
@@ -243,4 +247,4 @@ def one_hot_encode(X, categorical_indices, drop_first=False):
 ##########################
 ##########################
 ##########################
-#####################
+###############
